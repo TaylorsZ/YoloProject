@@ -1,0 +1,6 @@
+--index https://pypi.tuna.tsinghua.edu.cn/simple some-package
+
+loguru
+opencv-python-rolling
+opencv-contrib-python-rolling
+ultralytics
