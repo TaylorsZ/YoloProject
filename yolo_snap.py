@@ -2,8 +2,8 @@ import cv2
 import os
 
 # 设置视频文件路径和保存目录
-video_path = "/Users/taylor/Desktop/PythonProject/CADC/RecordVideo/08_12_18_13_59.mp4"
-save_dir = "/Users/taylor/Desktop/PythonProject/yolov5/datasets/bucket/images"
+video_path = "/Users/taylor/Desktop/PythonProject/CADC/RecordVideo/08_07_14_31_58.mp4"
+save_dir = "/Users/taylor/Desktop/PythonProject/YoloProject/datasets/bucket/images"
 
 # 确保保存目录存在
 if not os.path.exists(save_dir):
@@ -19,7 +19,7 @@ if not cap.isOpened():
 
 frame_count = 0
 save_interval = 4  # 每隔 5 帧保存一次
-saved_frame_count = 0
+saved_frame_count = 26
 
 while True:
     # 读取视频的一帧
