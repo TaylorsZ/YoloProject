@@ -1,1 +1,3 @@
 将libomp140.x86_64.dll 放到 'C:\Windows\System32' 以解决fbgemm.dll or one of its dependencies的问题
+
+cuda toolkit下载地址：https://developer.nvidia.com/cuda-toolkit-archive
