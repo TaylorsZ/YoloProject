@@ -1,3 +1,4 @@
+import os
 import time
 
 import cv2
@@ -6,7 +7,7 @@ from ultralytics import YOLO
 from PIL import Image
 device = torch.device('mps')
 # Load the trained model
-model = YOLO('best.pt').to(device)
+model = YOLO('best_0827.pt').to(device)
 
 # Load a test image
 # image_path = 'datasets/bucket/images/0000.jpg'
@@ -27,73 +28,78 @@ model = YOLO('best.pt').to(device)
 #         cv2.imshow('YOLOv5 Detection', image)
 #         cv2.waitKey(0)
 
+# 指定文件夹路径
+folder_path = '/Users/taylor/Desktop/PythonProject/CADC/RecordVideo'
 
-def draw_text_with_background(image, text, position, font_scale=0.7, font_thickness=2, bg_color=(0, 255, 0),
-                              text_color=(255, 255, 255)):
-    """
-    在图像上绘制带有背景的文本。
+def get_mp4_files(directory):
+    # 列出目录下的所有文件和文件夹
+    files = os.listdir(directory)
+    # 筛选出所有.mp4文件
+    mp4_files = [file for file in files if file.endswith('.mp4')]
+    return mp4_files
+file_names = get_mp4_files(folder_path)
+def format_time(seconds):
+    """将秒数格式化为 'MM:SS' 格式"""
+    minutes = int(seconds // 60)
+    seconds = int(seconds % 60)
+    return f"{minutes:02d}:{seconds:02d}"
+def play_video(video_path):
+    # 打开视频文件
+    cap = cv2.VideoCapture(video_path)
+    # cap = cv2.VideoCapture(2)
+    # 获取视频帧率
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    # 获取视频的总帧数
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # 计算视频的总时长
+    total_duration = total_frames / fps
+    # 设定快进和快退步长（帧数）
+    skip_frames = int(fps * 3)  # 3秒的帧数
 
-    :param image: 目标图像
-    :param text: 要绘制的文本
-    :param position: 文本的位置 (x, y)
-    :param font_scale: 字体缩放比例
-    :param font_thickness: 字体粗细
-    :param bg_color: 背景颜色
-    :param text_color: 文本颜色
-    """
-    # 计算文本大小
-    (text_width, text_height), baseline = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
+    current_frame = 0
 
-    # 计算背景矩形的位置
-    background_start = (position[0], position[1] - text_height - 10)
-    background_end = (position[0] + text_width, position[1])
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("无法读取视频")
+            break
+            # 计算当前播放时间
+        current_time = current_frame / fps
+        # 格式化当前时间和总时间
+        time_text = f"{format_time(current_time)} / {format_time(total_duration)}"
+        # 在视频帧上显示时间信息
+        cv2.putText(frame, time_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
-    # 绘制绿色背景矩形
-    cv2.rectangle(image, background_start, background_end, bg_color, cv2.FILLED)
+        # 进行目标检测
+        results = model(frame, conf=0.8)
+        if len(results) > 0:
+            result = results[0]
+            # 绘制检测结果
+            annotated_frame = result.plot()  # 获取带有检测框的图像
+        else:
+            print("未检测到目标")
+            annotated_frame = frame
+        cv2.imshow(f'Detect Bucket-{video_path}', annotated_frame)
+        key = cv2.waitKey(20)  # 等待 20ms 来显示帧，按键操作可捕获
+        if key == 27:  # 按 'ESC' 键退出
+            break
+        elif key == 3:  # 按右箭头键快进
+            current_frame += skip_frames
+            cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
+        elif key == 2:  # 按左箭头键快退
+            current_frame = max(0, current_frame - skip_frames)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
+        else:
+            current_frame += 1
 
-    # 绘制文本
-    cv2.putText(image, text, (position[0], position[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color,
-                font_thickness)
-
-
-# 打开视频文件
-cap = cv2.VideoCapture("/Users/taylor/Desktop/PythonProject/CADC/RecordVideo/08_07_14_31_58.mp4")
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Error: Could not read frame")
-        break
-    # 进行目标检测
-    results = model(frame)
-    if len(results) > 0:
-        result = results[0]
-        # 绘制检测结果
-        annotated_frame = result.plot()  # 获取带有检测框的图像
-        # for box in result.boxes:
-        #     # 提取边界框坐标、置信度和类别
-        #     xyxy = box.xyxy[0].tolist()
-        #     conf = box.conf[0].item()
-        #     cls = int(box.cls[0].item())
-        #
-        #     # 绘制边界框
-        #     cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (0, 255, 0), 2)
-        #
-        #     # 绘制类别和置信度
-        #     label = f"{result.names[cls]}: {int(conf*100)}%"
-        #     # 在图像上绘制带背景的文本
-        #     draw_text_with_background(frame, label, (int(xyxy[0]), int(xyxy[1])))
-
-    else:
-        annotated_frame = frame
-    cv2.imshow('YOLOv5 Detection', annotated_frame)
-
-
-    if cv2.waitKey(20) & 0xFF == ord('q'):
-        break
-
-# 释放视频捕获对象和关闭窗口
-cap.release()
-cv2.destroyAllWindows()
+    # 释放视频捕获对象和关闭窗口
+    cap.release()
+    cv2.destroyAllWindows()
+# url = "/Users/taylor/Documents/QGroundControl/Video/2024-08-23_17.17.11.mkv"
+# play_video(url)
+play_video(f"{folder_path}/{file_names[3]}")
+for file_name in file_names:
+    play_video(f"{folder_path}/{file_name}")
 
 
 

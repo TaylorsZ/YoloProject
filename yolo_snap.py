@@ -2,7 +2,7 @@ import cv2
 import os
 
 # 设置视频文件路径和保存目录
-video_path = "/Users/taylor/Desktop/PythonProject/CADC/RecordVideo/08_07_14_31_58.mp4"
+video_path = "/Users/taylor/Desktop/PythonProject/CADC/RecordVideo/09_04_14_58_05.mp4"
 save_dir = "/Users/taylor/Desktop/PythonProject/YoloProject/datasets/bucket/images"
 
 # 确保保存目录存在
@@ -18,8 +18,8 @@ if not cap.isOpened():
     exit()
 
 frame_count = 0
-save_interval = 4  # 每隔 5 帧保存一次
-saved_frame_count = 26
+save_interval = 25  # 每隔 5 帧保存一次
+saved_frame_count = 126
 
 while True:
     # 读取视频的一帧
